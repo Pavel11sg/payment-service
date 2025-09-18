@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: payment-service-test
+  docker:
+    compose:
+      enabled: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/testdb
+      database: testdb
+      auto-index-creation: true
+  liquibase:
+    enabled: false
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 4.14.0

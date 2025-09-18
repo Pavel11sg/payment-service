@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: payment-service
+  docker:
+    compose:
+      enabled: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/paymentdb
+      database: paymentdb
+      auto-index-creation: false
+  liquibase:
+    enabled: true
+    change-log: db/changelog/db.changelog-master.yml
+
+server:
+  port: 8084
+
+logging:
+  level:
+    com.example.tasks.paymentservice: DEBUG
+    org.liquibase: DEBUG
+    org.springframework.core.io: DEBUG
