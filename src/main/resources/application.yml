@@ -21,3 +21,7 @@ logging:
     com.example.tasks.paymentservice: DEBUG
     org.liquibase: DEBUG
     org.springframework.core.io: DEBUG
+
+gateway:
+  internal:
+    secret: internal-gateway-secret-key-12345
