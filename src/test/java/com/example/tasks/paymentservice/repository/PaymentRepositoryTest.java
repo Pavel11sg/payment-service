@@ -1,10 +1,8 @@
-package com.example.tasks.paymentservice.unit;
-
+package com.example.tasks.paymentservice.repository;
 
 import com.example.tasks.paymentservice.TestContainerConfig;
 import com.example.tasks.paymentservice.model.Payment;
-import com.example.tasks.paymentservice.model.PaymentStatus;
-import com.example.tasks.paymentservice.repository.PaymentRepository;
+import org.example.tasks.model.PaymentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

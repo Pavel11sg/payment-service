@@ -12,15 +12,17 @@ spring:
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.yml
+  kafka:
+    bootstrap-servers: localhost:9092
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+kafka:
+  topics:
+    order-created: order-created-topic
+    payment-created: payment-created-topic
 
 server:
   port: 8084
-
-logging:
-  level:
-    com.example.tasks.paymentservice: DEBUG
-    org.liquibase: DEBUG
-    org.springframework.core.io: DEBUG
 
 gateway:
   internal:

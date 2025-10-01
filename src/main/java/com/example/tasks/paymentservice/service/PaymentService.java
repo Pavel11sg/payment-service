@@ -7,25 +7,36 @@ import com.example.tasks.paymentservice.dto.mapper.PaymentMapper;
 import com.example.tasks.paymentservice.exception.PaymentAuthorizationException;
 import com.example.tasks.paymentservice.exception.PaymentNotFoundException;
 import com.example.tasks.paymentservice.model.Payment;
-import com.example.tasks.paymentservice.model.PaymentStatus;
 import com.example.tasks.paymentservice.repository.PaymentRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.example.tasks.dto.OrderCreatedEvent;
+import org.example.tasks.dto.PaymentCreatedEvent;
+import org.example.tasks.model.PaymentStatus;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
+@Slf4j
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ExternalPaymentApiService externalPaymentApiService;
     private final PaymentMapper paymentMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    @Value("${kafka.topics.payment-created}")
+    private String paymentCreatedTopic;
 
-    public PaymentService(PaymentRepository paymentRepository, ExternalPaymentApiService externalPaymentApiService, PaymentMapper paymentMapper) {
+    public PaymentService(PaymentRepository paymentRepository, ExternalPaymentApiService externalPaymentApiService, PaymentMapper paymentMapper, KafkaTemplate<String, Object> kafkaTemplate) {
         this.paymentRepository = paymentRepository;
         this.externalPaymentApiService = externalPaymentApiService;
         this.paymentMapper = paymentMapper;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @Transactional
@@ -110,5 +121,56 @@ public class PaymentService {
 
     private boolean isPaymentSuccessful(ExternalPaymentApiResponse response) {
         return response.getPaymentStatusNumber() % 2 == 0;
+    }
+
+    @Transactional
+    public void processOrderCreatedEvent(OrderCreatedEvent orderCreatedEvent) {
+        log.info("Processing OrderCreatedEvent for order: {}", orderCreatedEvent.getOrderId());
+
+        Payment payment = new Payment();
+        payment.setOrderId(orderCreatedEvent.getOrderId().toString());
+        payment.setUserId(orderCreatedEvent.getUserId().toString());
+        payment.setPaymentAmount(orderCreatedEvent.getTotalAmount());
+        payment.setCurrency(orderCreatedEvent.getCurrency());
+        payment.setTimestamp(LocalDateTime.now());
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setDescription("Payment for order: " + orderCreatedEvent.getOrderId());
+        payment.setPaymentMethodToken(orderCreatedEvent.getPaymentMethodToken());
+
+        try {
+            ExternalPaymentApiResponse paymentResponse = externalPaymentApiService.processPayment(payment);
+            if (isPaymentSuccessful(paymentResponse)) {
+                payment.setStatus(PaymentStatus.SUCCESS);
+            } else {
+                payment.setStatus(PaymentStatus.FAILED);
+                payment.setErrorMessage("Payment processing failed");
+            }
+            payment.setProcessorTransactionId(paymentResponse.getTransactionId());
+
+        } catch (Exception e) {
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setErrorMessage(e.getMessage());
+            payment.setErrorCode("PAYMENT_PROCESSING_ERROR");
+        }
+
+        Payment savedPayment = paymentRepository.save(payment);
+        sendPaymentCreatedEvent(savedPayment);
+    }
+
+    private void sendPaymentCreatedEvent(Payment payment) {
+        try {
+            PaymentCreatedEvent event = new PaymentCreatedEvent();
+            event.setOrderId(UUID.fromString(payment.getOrderId()));
+            event.setStatus(payment.getStatus());
+            event.setPaymentId(payment.getId());
+            event.setErrorMessage(payment.getErrorMessage());
+
+            kafkaTemplate.send(paymentCreatedTopic, event);
+            log.info("PaymentCreatedEvent sent for order: {}, status: {}",
+                    payment.getOrderId(), payment.getStatus());
+
+        } catch (Exception e) {
+            log.error("Failed to send PaymentCreatedEvent for payment: {}", payment.getId(), e);
+        }
     }
 }
