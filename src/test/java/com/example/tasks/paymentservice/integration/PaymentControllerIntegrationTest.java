@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         excludeAutoConfiguration = SecurityConfig.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = InternalAuthFilter.class))
 @ActiveProfiles("test")
-public class PaymentControllerTestIntegrationTest {
+public class PaymentControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 

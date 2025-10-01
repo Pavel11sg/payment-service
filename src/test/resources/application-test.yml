@@ -6,7 +6,6 @@ spring:
       enabled: false
   data:
     mongodb:
-      uri: mongodb://localhost:27017/testdb
       database: testdb
       auto-index-creation: true
   liquibase:
@@ -16,6 +15,8 @@ spring:
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
+    listener:
+      missing-topics-fatal: false
     jackson:
       serialization:
         write-dates-as-timestamps: false
