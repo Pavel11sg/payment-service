@@ -6,14 +6,13 @@ spring:
       enabled: false
   data:
     mongodb:
-      uri: mongodb://localhost:27017/paymentdb
+      uri: mongodb://mongodb:27017/paymentdb
       database: paymentdb
       auto-index-creation: true
-#  liquibase:
-#    enabled: true
-#    change-log: db/changelog/db.changelog-master.yml
+  liquibase:
+    enabled: false
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9093
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 kafka:
