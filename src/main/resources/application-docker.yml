@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: payment-service
+  docker:
+    compose:
+      enabled: false
+  data:
+    mongodb:
+      uri: mongodb://payment-mongodb:27017/paymentdb
+      database: paymentdb
+      auto-index-creation: true
+  liquibase:
+    enabled: false
+  kafka:
+    bootstrap-servers: order-payment-kafka:9093
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+kafka:
+  topics:
+    order-created: order-created-topic
+    payment-created: payment-created-topic
+
+server:
+  port: 8084
+
+gateway:
+  internal:
+    secret: internal-gateway-secret-key-12345
