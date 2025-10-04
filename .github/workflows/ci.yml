@@ -79,6 +79,35 @@ jobs:
       - name: Checkout payment-service
         uses: actions/checkout@v4
 
+      - name: Checkout shared-kafka
+        uses: actions/checkout@v4
+        with:
+          repository: Pavel11sg/shared-kafka
+          path: shared-kafka
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and install shared-kafka
+        run: |
+          cd shared-kafka
+          mvn clean install -DskipTests
+
+      - name: Create Docker build context
+        run: |
+          # Create the directory structure that Dockerfile expects
+          mkdir -p docker-build-context
+          # Move both projects to simulate the parent directory structure
+          mv . docker-build-context/payment-service
+          mv shared-kafka docker-build-context/shared-kafka
+          # Move Dockerfile to the build context
+          mv docker-build-context/payment-service/Dockerfile docker-build-context/
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -91,6 +120,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./docker-build-context
+          file: ./docker-build-context/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
