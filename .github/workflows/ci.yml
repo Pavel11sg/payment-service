@@ -101,12 +101,17 @@ jobs:
       - name: Create Docker build context
         run: |
           # Create the directory structure that Dockerfile expects
-          mkdir -p docker-build-context
-          # Move both projects to simulate the parent directory structure
-          mv . docker-build-context/payment-service
-          mv shared-kafka docker-build-context/shared-kafka
-          # Move Dockerfile to the build context
-          mv docker-build-context/payment-service/Dockerfile docker-build-context/
+          mkdir -p docker-build-context/payment-service
+          mkdir -p docker-build-context/shared-kafka
+          
+          # Copy contents instead of moving
+          cp -r ./* docker-build-context/payment-service/ 2>/dev/null || true
+          cp -r ./.dockerignore docker-build-context/payment-service/ 2>/dev/null || true
+          cp -r ./.* docker-build-context/payment-service/ 2>/dev/null || true
+          cp -r shared-kafka/* docker-build-context/shared-kafka/
+          
+          # Copy Dockerfile to the build context root
+          cp Dockerfile docker-build-context/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
