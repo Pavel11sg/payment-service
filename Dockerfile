@@ -21,8 +21,8 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy the built jar from builder stage
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar payment-service.jar
 
 EXPOSE 8084
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "payment-service.jar"]
